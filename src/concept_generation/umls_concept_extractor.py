@@ -17,7 +17,7 @@ from java.util import HashMap
 
 # TODO: need to get rid of hardcoded paths
 def generate_ngrams(aString, stopwords, tuple_size):
-    tokens = [word for word in aString.split(' ') if word not in stopwords]
+    tokens = [re.sub('\\n|\\.|\\(|\\)|\\-', '', word) for word in aString.split(' ') if word not in stopwords]
     ngrams = NGramFactory.parseNgrams(tokens, tuple_size)
     return ngrams
 
@@ -48,6 +48,7 @@ def generate_concepts(input_dir_path, stopword_file_path):
 
     print "STEP 2: Generating concept documents "
     try:
+        count = 0
         for document in docSentMap.keys():
             output_file_path = output_file_dir + '/' + document
             print "WRITING OUT CONCEPTS FOR DOCUMENT: ", document
@@ -59,19 +60,20 @@ def generate_concepts(input_dir_path, stopword_file_path):
                     phraseArray = map(lambda x: ''.join([x, ' ']), ngram.getTuple())
                     phrase = ''.join(phraseArray)
                     results = umls.retrieveConcepts(phrase)
-                    for result in results:
-                        for candidate in umls.retrieveCandidates(result):
-                            if math.fabs(candidate.getScore()) >= 800:
-                                # TODO: once database is generated, add query
-                                #       to grab concept definition and write
-                                #       concept CUI definition out to file as
-                                #       well.
-                                formatted_output = str(sentNo) + "|" + phrase + "|" + str(candidate.getConceptId()) + "|" + candidate.getConceptName() + '\n'
-                                output = open(output_file_path, 'a+')
-                                try:
-                                    output.write(formatted_output)
-                                finally:
-                                    output.close()
+                    for candidate in umls.retrieveCandidates(results):
+                         if math.fabs(candidate.getScore()) >= 800:
+                             # TODO: once database is generated, add query
+                             #       to grab concept definition and write
+                             #       concept CUI definition out to file as
+                             #       well.
+                             formatted_output = str(sentNo) + "|" + phrase + "|" + str(candidate.getConceptId()) + "|" + candidate.getConceptName() + '\n'
+                             output = open(output_file_path, 'a+')
+                             try:
+                                 output.write(formatted_output)
+                             finally:
+                                 output.close()
+            count = count + 1
+            print "NUM OF DOCS PROCESSED: ", count
         print "STEP 2 COMPLETE"
     finally:
         docSentMapBinFile.close()
