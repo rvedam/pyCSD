@@ -14,6 +14,7 @@ import sys, cPickle as pickle, cStringIO as StringIO, math, re
 from gov.nih.nlm.nls.metamap import Ev
 from com.vrn.utils import MetaMapWrapper, NGramFactory, NGram
 from java.util import HashMap
+import os.path   # Platform-independent path manipulation
 
 # TODO: need to get rid of hardcoded paths
 def generate_ngrams(aString, stopwords, tuple_size):
@@ -22,9 +23,9 @@ def generate_ngrams(aString, stopwords, tuple_size):
     return ngrams
 
 def generate_concepts(input_dir_path, stopword_file_path):
-    sent_file_path = input_dir_path + '/full_text_with_abstract_and_title.metamap'
-    pmap_file_path = input_dir_path + '/full_text_with_abstract_and_title.metamap.chunkmap'
-    output_file_dir = input_dir_path + '/concept_files'
+    sent_file_path = os.path.join(input_dir_path, 'full_text_with_abstract_and_title.metamap')
+    pmap_file_path = os.path.join(input_dir_path, 'full_text_with_abstract_and_title.metamap.chunkmap')
+    output_file_dir = os.path.join(input_dir_path, 'concept_files')
     stopwords_file = open(stopword_file_path, 'r')
     stopwords = [word.replace('\n', '') for word in stopwords_file.readlines() if '#' not in word and word != '\n']
     print stopwords
@@ -50,7 +51,7 @@ def generate_concepts(input_dir_path, stopword_file_path):
     try:
         count = 0
         for document in docSentMap.keys():
-            output_file_path = output_file_dir + '/' + document
+            output_file_path = os.path.join(output_file_dir, document)
             print "WRITING OUT CONCEPTS FOR DOCUMENT: ", document
             for sentNo in docSentMap[document]:
                 # grab splitted sentence
