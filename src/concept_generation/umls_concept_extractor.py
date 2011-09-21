@@ -13,7 +13,6 @@ __date__ ="$Sep 11, 2011 9:56:52 PM$"
 import sys, cPickle as pickle, cStringIO as StringIO, math, re
 from gov.nih.nlm.nls.metamap import Ev
 from com.vrn.utils import MetaMapWrapper, NGramFactory, NGram
-from java.util import HashMap
 
 # TODO: need to get rid of hardcoded paths
 def generate_ngrams(aString, stopwords, tuple_size):
@@ -49,14 +48,19 @@ def generate_concepts(input_dir_path, stopword_file_path):
     print "STEP 2: Generating concept documents "
     try:
         count = 0
+        sent_sentNgrams = {}
         for document in docSentMap.keys():
             output_file_path = output_file_dir + '/' + document
             print "WRITING OUT CONCEPTS FOR DOCUMENT: ", document
+            sent_sentNgrams[document] = []
             for sentNo in docSentMap[document]:
                 # grab splitted sentence
                 key = str(sentNo).zfill(10)
                 sentNgrams = generate_ngrams(doc_sent_data[key], stopwords, 3)
-                for ngram in sentNgrams:
+                [sent_sentNgrams[document].append(ngram) for ngram in sentNgrams]
+
+         for document in docSentMap.keys():
+                for ngram in sent_sentNgrams[document]:
                     phraseArray = map(lambda x: ''.join([x, ' ']), ngram.getTuple())
                     phrase = ''.join(phraseArray)
                     results = umls.retrieveConcepts(phrase)
