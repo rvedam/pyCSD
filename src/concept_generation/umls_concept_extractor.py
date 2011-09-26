@@ -10,18 +10,12 @@
 __author__="Ramnarayan Vedam"
 __date__ ="$Sep 11, 2011 9:56:52 PM$"
 
-import sys, cPickle as pickle, cStringIO as StringIO, math, re
-from gov.nih.nlm.nls.metamap import Ev
-from com.vrn.utils import MetaMapWrapper, NGramFactory, NGram
-from java.util import HashMap
+import sys, cPickle as pickle, cStringIO as StringIO, math, csv
+from com.vrn.utils import MetaMapWrapper
 import os.path   # Platform-independent path manipulation
+import csdutils
 
 # TODO: need to get rid of hardcoded paths
-def generate_ngrams(aString, stopwords, tuple_size):
-    tokens = [re.sub('\\n|\\.|\\(|\\)|\\-', '', word) for word in aString.split(' ') if word not in stopwords]
-    ngrams = NGramFactory.parseNgrams(tokens, tuple_size)
-    return ngrams
-
 def generate_concepts(input_dir_path, stopword_file_path):
     sent_file_path = os.path.join(input_dir_path, 'full_text_with_abstract_and_title.metamap')
     pmap_file_path = os.path.join(input_dir_path, 'full_text_with_abstract_and_title.metamap.chunkmap')
@@ -40,11 +34,13 @@ def generate_concepts(input_dir_path, stopword_file_path):
     sio = StringIO.StringIO(map_bin_data)
     docSentMap = pickle.load(sio)
 
-    sent_file = open(sent_file_path, 'r')
     doc_sent_data = {}
-    for sentence in sent_file.readlines():
-        splitSent = sentence.split('|')
-        doc_sent_data[splitSent[0]] = splitSent[1]
+#    sentMapReader = csv.reader(open(sent_file_path, 'rU'), delimiter="|")
+    sentMapData = open(sent_file_path, 'rU')
+#    for sentence in sentMapReader:
+    for sentData in sentMapData.readlines():
+        sentence = sentData.split('|')
+        doc_sent_data[sentence[0]] = sentence[1]
     print "STEP 1 COMPLETE"
 
     print "STEP 2: Generating concept documents "
@@ -53,33 +49,42 @@ def generate_concepts(input_dir_path, stopword_file_path):
         sent_sentNgrams = {}
         for document in docSentMap.keys():
             output_file_path = os.path.join(output_file_dir, document)
-            print "WRITING OUT CONCEPTS FOR DOCUMENT: ", document
             sent_sentNgrams[document] = []
+            print "GENERATING NGRAMS FOR DOCUMENT: ", document
             for sentNo in docSentMap[document]:
                 # grab splitted sentence
                 key = str(sentNo).zfill(10)
-                sentNgrams = generate_ngrams(doc_sent_data[key], stopwords, 3)
+                sentNgrams = csdutils.generate_ngrams(doc_sent_data[key], stopwords, 3)
                 [sent_sentNgrams[document].append(ngram) for ngram in sentNgrams]
+            count = count + 1
+            if count >= 20:
+                break
 
-         for document in docSentMap.keys():
+        #
+        # only process twenty documents (to check out performance and start
+        # initial disambiguation).
+        #
+        count = 0
+        for document in docSentMap.keys():
+                print "WRITING OUT CONCEPTS FOR DOCUMENT: ", document
                 for ngram in sent_sentNgrams[document]:
-                    phraseArray = map(lambda x: ''.join([x, ' ']), ngram.getTuple())
-                    phrase = ''.join(phraseArray)
-                    results = umls.retrieveConcepts(phrase)
+                    results = umls.retrieveConcepts(ngram)
                     for candidate in umls.retrieveCandidates(results):
                          if math.fabs(candidate.getScore()) >= 800:
                              # TODO: once database is generated, add query
                              #       to grab concept definition and write
                              #       concept CUI definition out to file as
                              #       well.
-                             formatted_output = str(sentNo) + "|" + phrase + "|" + str(candidate.getConceptId()) + "|" + candidate.getConceptName() + '\n'
+                             formatted_output = str(sentNo) + "|" + ngram + "|" + str(candidate.getConceptId()) + "|" + candidate.getConceptName() + '\n'
                              output = open(output_file_path, 'a+')
                              try:
                                  output.write(formatted_output)
                              finally:
                                  output.close()
-            count = count + 1
-            print "NUM OF DOCS PROCESSED: ", count
+                count = count + 1
+                if count >= 20:
+                    break
+        print "NUM OF DOCS PROCESSED: ", count
         print "STEP 2 COMPLETE"
     finally:
         docSentMapBinFile.close()

@@ -1,1 +1,8 @@
-This readme was empty, now it's not.
+This is a set of programs that would allow one to perform sense disambiguation 
+on UMLS concepts extracted from free text. It depends on the following 
+resources:
+
+1) Stopwords list created by Chris Buckley and Gerard Salton (retrieved from 
+http://www.lextek.com/manuals/onix/stopwords2.html and added to project for 
+convenience)
+
