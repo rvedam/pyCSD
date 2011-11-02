@@ -1,0 +1,28 @@
+\documentclass[12pt, letterpaper]{article}
+\usepackage{amsmath}
+\begin{document}
+\begin{center}
+\textit{\textbf{Concept Sense Disambiguation}}
+\end{center}
+
+\section{Definitions}
+Let $w$ represent a word in some language $L$ (Assuming $L$ is English)\\
+Let us define the following:\\
+\begin{itemize}
+\item{a \textbf{sentence} $s := \{w_1,w_2,...,w_n\}$} of words.
+\item{a \textbf{document} $d := \{s_1,s_2,...,s_n\}$} of sentences.
+\item{a \textbf{context} $\beta$ is defined as the window in which a concept or set of concepts may exist. in our problem, let $\beta := s_i$ for some sentence $s_i \in d$.}
+\item{a \textbf{span}, denoted by $\alpha$, is defined as the subset of words within a given context $\beta$ for which a concept mapping(s) may exist.}
+\item{a \textbf{corpus} $C := \{d_1,d_2,...,d_n\}$ of documents}
+\item{a \textbf{concept} $\gamma$ is a concept (represented in this case as a UMLS Concept CUI) that best describes the meaning of a given span $\alpha$}
+\item{Given a corpus $C$ and a context $\beta$, we define the \textbf{meaning utility} of a word as a function $M: (\gamma,\alpha) \rightarrow n$ where n is nonnegative number representing the usefulness for a span $\alpha$ given a particular concept}
+\end{itemize}
+
+\section{Problem Description}
+Given a corpus $C$ of documents, for any given span $\alpha_i \in \beta$ for a given context $\beta$ for which there exists one or more $\gamma$ that describe $\alpha_i$, we are to find the $(\gamma,\alpha_i)$ pair that satisifies:\\[1mm]
+\begin{center}
+\begin{equation}
+\arg\max_{(\gamma, \alpha_i)}(M(\gamma,\alpha_i))
+\end{equation}
+\end{center}
+\end{document}
