@@ -71,17 +71,13 @@ def generate_concepts(data_dir):
         doc_sent_data[sentence[0]] = sentence[1]
     print "STEP 1 COMPLETE"
 
-    process_pool = multiprocessing.Pool(10)
+    process_pool = multiprocessing.Pool(20)
     print "STEP 2: Generating concept documents "
-    count = 0
     try:
        for document in docSentMap.keys():
             output_file_path = os.path.join(output_file_dir, document)
             docSentList = docSentMap[document]
             process_pool.apply_async(cui_extractor_worker, (docSentList, output_file_path), callback=completed_cb)
-            count += 1
-            if count == 15:
-                break
     finally:
         process_pool.close()
         process_pool.join()
