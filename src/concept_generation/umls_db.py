@@ -13,11 +13,11 @@ from sqlite_dict import *
 
 # Modify to fit your system - if the db doesn't exist, it'll be created using this
 # file. 
-#MRDEF_RRF="/Volumes/More Ocho/UMLS/umls/2010AA/META/MRDEF.RRF"
-MRDEF_RREF="/home/vedam/data_disk/UMLS/2011AA/META/MRDEF.RRF"
+MRDEF_RRF="/opt/umls/full/2011AA/META/MRDEF.RRF"
+#MRDEF_RREF="/home/vedam/data_disk/UMLS/2011AA/META/MRDEF.RRF"
 
 # The actual location of the DB
-UMLS_DB_LOCATION=os.path.normpath(os.path.expanduser("~/data_disk/umlsdb.sqlite3"))
+UMLS_DB_LOCATION=os.path.normpath(os.path.expanduser("/data/ram/umlsdb.sqlite3"))
 
 def generate_umls_db(mrdef, db_dest):
     original=open(mrdef, 'rU')

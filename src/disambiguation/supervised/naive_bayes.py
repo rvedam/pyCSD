@@ -44,8 +44,18 @@ class NaivesBayes:
                 # create a dictionary to keep track of word counts for a given sense.
                 if cui not in self.corpus_word_concept_count.keys():
                     self.corpus_word_concept_count[cui] = {}
+                # grab the phrase information that we have recorded from the metamap output.
+                phrase_info = split_line[len(split_line) - 1].split(':')
+                phraseStartIdx = int(phrase_info[0])
+                phrase_length = int(phrase_info[1])
+                phraseEndIdx = phraseStartIdx + phrase_length
+
+                # grab the sentence
+                sentence = self.sent_map[split_line[0].zfill(10)]
+                phrase = sentence[phraseStartIdx:phraseEndIdx]
+
                 # count the words inside the phrase for which the context has been extracted
-                for word in split_line[3].split(' '):
+                for word in phrase.split(' '):
                     if word in self.corpus_word_count.keys():
                         self.corpus_word_count[word] = self.corpus_word_count[word] + 1
                     else:
@@ -54,9 +64,9 @@ class NaivesBayes:
                         self.corpus_word_concept_count[cui][word] += 1
                     else:
                         self.corpus_word_concept_count[cui][word] = 1
-                if split_line[3] not in self.word_concept_map.keys():
-                    self.word_concept_map[split_line[3]] = []
-                self.word_concept_map[split_line[3]].append(cui)
+                if phrase not in self.word_concept_map.keys():
+                    self.word_concept_map[phrase] = []
+                self.word_concept_map[phrase].append(cui)
     def disambiguation(self, phrase):
         '''
         disambiguates set of concepts for a given input with 
@@ -65,15 +75,21 @@ class NaivesBayes:
         try:
             c_scores = {}
             for cui in self.word_concept_map[phrase]:
-                c_scores[cui] = math.log(concept_prob[cui])
+                c_scores[cui] = math.fabs(math.log(float(self.concept_prob[cui])))
+                print 'CONCEPT CUI: ', cui
+                print 'CONCEPT CUI PROBABILITY: ', c_scores[cui]
                 for word in phrase.split(' '):
-                    c_scores[concept] += math.log(self.corpus_word_concept_count[cui][word]/self.corpus_word_count[word])
+                    c_scores[cui] += math.fabs(math.log(float(self.corpus_word_concept_count[cui][word])/float(self.corpus_word_count[word])))
+                print 'FINAL CONCEPT SCORE: ', c_scores[cui]
             # find the maximum concept
-            disamb_concept, cur_max = "", 0
+            disamb_concept, cur_max = "", 0.0
+            print "DISAMBIGUATING PHRASE: " , phrase
             for concept in c_scores.keys():
+                print "concept: " , concept
+                print 'c_scores[concept]: ', c_scores[concept]
                 if c_scores[concept] > cur_max:
                     disamb_concept, cur_max = concept, c_scores[concept]
-            return max_concept
+            return 'DISAMBIGUATED CONCEPT: ', disamb_concept
         except KeyError:
             print 'phrase never encountered in corpus'
 
@@ -97,8 +113,9 @@ if __name__ == "__main__":
             else:
                 test_set_paths.append(fpath)
     
-    classifier = NaivesBayes(tr_size)
+    sent_file_path = os.path.join('/data/ram/14k_collection', 'full_text_with_abstract_and_title.metamap')
+    classifier = NaivesBayes(tr_size, sent_file_path)
     print 'TRAINING AGENT'
     classifier.training(training_set_paths)
     print 'TRAINING AGENT COMPLETED'
-    print classifier.disambiguation('Environmental Protection Agency')
+    print classifier.disambiguation('target')
