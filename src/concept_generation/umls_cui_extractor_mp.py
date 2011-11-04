@@ -36,6 +36,7 @@ def cui_extractor_worker(docSentList, output_file_path):
         for sentNo in docSentList: 
             global doc_sent_data
             concepts = metamap.retrieve_concepts(doc_sent_data[str(sentNo).zfill(10)]) 
+            metamap.terminate_metamap()
             for concept_output in concepts: 
                 split_concept = concept_output.split('|') 
                 confidence_score = split_concept[2] 
@@ -71,7 +72,7 @@ def generate_concepts(data_dir):
         doc_sent_data[sentence[0]] = sentence[1]
     print "STEP 1 COMPLETE"
 
-    process_pool = multiprocessing.Pool(20)
+    process_pool = multiprocessing.Pool(10)
     print "STEP 2: Generating concept documents "
     try:
        for document in docSentMap.keys():
