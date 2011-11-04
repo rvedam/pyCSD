@@ -19,8 +19,16 @@ def retrieve_concepts(query):
     # allow mm_process to receive SIGPIPE if p2 exits. 
     process.stdout.close() 
     metamap_output = mm_process.communicate()[0]
+    mm_process.stdout.close()
+    process.terminate()
     # print metamap_output 
-    return filter_candidate_concepts(metamap_output)
+    try:
+        result = filter_candidate_concepts(metamap_output)
+        return result
+    finally:
+        mm_process.wait()       # wait until the mm_process completely terminates
+        time.sleep(1)
+
 
 if __name__ == '__main__':
     if sys.argv[0] == 'python':
