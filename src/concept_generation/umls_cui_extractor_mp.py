@@ -72,7 +72,6 @@ def generate_concepts(data_dir):
         global doc_sent_data
         doc_sent_data[sentence[0]] = sentence[1]
     print "STEP 1 COMPLETE"
-
     documents = docSentMap.keys()
 
     # if the remaining file list path exists then that means then the process

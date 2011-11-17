@@ -28,7 +28,6 @@ def retrieve_concepts(query):
     
     return result
             
-
 if __name__ == '__main__':
     if sys.argv[0] == 'python':
         query = "".join(sys.argv[2:])
