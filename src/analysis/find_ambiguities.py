@@ -28,18 +28,33 @@ def find_ambiguities(data_dir):
     # for each document, grab the phrase and the CUI (we'll add filtering later) 
     # and store them
     for document in os.listdir(output_file_dir):
+        print 'PROCESSING DOCUMENT: ', document
         phrase_cui_file = open(os.path.join(output_file_dir, document), 'rU')
         for phrase_cui_line in phrase_cui_file.readlines():
             phrase_cui_comp = phrase_cui_line.split('|')
+            # find the sentence where the phrase is located 
+            sentence = sent_map[phrase_cui_comp[0].zfill(10)]
             # grab the phrase information that we have recorded from the metamap output.
-            phrase_info = phrase_cui_comp[len(phrase_cui_comp) - 1].split(':')
-            phraseStartIdx = int(phrase_info[0])
-            phrase_length = int(phrase_info[1])
-            phraseEndIdx = phraseStartIdx + phrase_length
-
+            phrase_info = phrase_cui_comp[len(phrase_cui_comp) - 1]
+            phraseList = []
+            phrase = " "
+            if ',' in phrase_info: # we may have a concept mapped to a phrase spanning two words
+                for phrase_info_comp in phrase_info.split(','):
+                    splited_pinfo_comp = phrase_info_comp.split(':')
+                    phraseStartIdx = int(splited_pinfo_comp[0]) 
+                    phrase_length = int(splited_pinfo_comp[1]) 
+                    phraseEndIdx = phraseStartIdx + phrase_length
+                    phraseList.append(sentence[phraseStartIdx:phraseEndIdx])
+                phrase = phrase.join(phraseList)
+            else:
+                if ':' in phrase_info: 
+                    pinfo_comp = phrase_info.split(':')
+                    phraseStartIdx = int(pinfo_comp[0]) 
+                    phrase_length = int(pinfo_comp[1]) 
+                    phraseEndIdx = phraseStartIdx + phrase_length
+                    phrase = sentence[phraseStartIdx:phraseEndIdx]
+                
             # grab the sentence and phrase
-            sentence = self.sent_map[phrase_cui_comp[0].zfill(10)]
-            phrase = sentence[phraseStartIdx:phraseEndIdx]
             if phrase not in word_concept_dict:
                 word_concept_dict[phrase] = []
             word_concept_dict[phrase].append(phrase_cui_comp[2])
