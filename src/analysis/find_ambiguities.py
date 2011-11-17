@@ -6,10 +6,10 @@
 import multiprocessing 
 import sys, cPickle as pickle, cStringIO as StringIO, math, csv
 import os.path   # Platform-independent path manipulation
-import csdutils, metamap
-from sqlite_dict import *
 import time
 import smtplib
+from email.mime.text import MIMEText
+
 
 word_concept_dict = {}
 concept_count_dir = {}
@@ -19,17 +19,16 @@ def find_ambiguities(data_dir):
     pmap_file_path = os.path.join(data_dir, 'full_text_with_abstract_and_title.metamap.chunkmap')
     output_file_dir = os.path.join(data_dir, 'concept_files')
     # read in the sentence map (we need the actual phrase when finding the concept
-    doc_sent_data = dict()
+    sent_map = dict()
     sentMapData = open(sent_file_path, 'rU')
     for sentData in sentMapData.readlines():
         sentence = sentData.split('|')
-        global doc_sent_data
         sent_map[sentence[0]] = sentence[1]
 
     # for each document, grab the phrase and the CUI (we'll add filtering later) 
     # and store them
     for document in os.listdir(output_file_dir):
-        phrase_cui_file = open(document, 'rU')
+        phrase_cui_file = open(os.path.join(output_file_dir, document), 'rU')
         for phrase_cui_line in phrase_cui_file.readlines():
             phrase_cui_comp = phrase_cui_line.split('|')
             # grab the phrase information that we have recorded from the metamap output.
@@ -65,3 +64,22 @@ if __name__ == '__main__':
         pickle.dump(ambig_word_concept_dict, ambig_file)
     finally:
         ambig_file.close()
+    
+    print 'PROCESS COMPLETED'
+    fromaddr = 'Ramnarayan.Vedam@uth.tmc.edu'
+    toaddrs = ['Ramnarayan.Vedam@uth.tmc.edu', 'Jorge.R.Herskovic@uth.tmc.edu']
+
+    Subject = 'Word Ambiguities detection program completed'
+    msg = MIMEText('The program that would find all ambiguities from running metamap with wsd turned on has been completed.\
+Please look at the pickled file ambiguities.pkl located in /data/ram/14k_collection/ directory')
+
+    msg['Subject'] = Subject
+    msg['From'] = fromaddr
+    msg['To'] = toaddrs
+
+    # send email to both Jorge and I (TODO: create a file holding list of emails that program should email to)
+    server = smtplib.SMTP('smtp.uth.tmc.edu')
+    server.set_debuglevel(1)
+    server.sendmail(fromaddr, toaddrs, msg.as_string())
+    server.quit()
+    
