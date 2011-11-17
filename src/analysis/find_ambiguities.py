@@ -41,10 +41,11 @@ def find_ambiguities(data_dir):
             if ',' in phrase_info: # we may have a concept mapped to a phrase spanning two words
                 for phrase_info_comp in phrase_info.split(','):
                     splited_pinfo_comp = phrase_info_comp.split(':')
-                    phraseStartIdx = int(splited_pinfo_comp[0]) 
-                    phrase_length = int(splited_pinfo_comp[1]) 
-                    phraseEndIdx = phraseStartIdx + phrase_length
-                    phraseList.append(sentence[phraseStartIdx:phraseEndIdx])
+                    if isinstance(splited_pinfo_comp[0], (int ,long)) and isinstance(splited_pinfo_comp[1], (int, long)):
+                        phraseStartIdx = int(splited_pinfo_comp[0])
+                        phrase_length = int(splited_pinfo_comp[1]) 
+                        phraseEndIdx = phraseStartIdx + phrase_length
+                        phraseList.append(sentence[phraseStartIdx:phraseEndIdx])
                 phrase = phrase.join(phraseList)
             else:
                 if ':' in phrase_info: 
