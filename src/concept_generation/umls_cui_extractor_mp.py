@@ -35,8 +35,8 @@ def cui_extractor_worker(docSentList, output_file_path):
     try: 
         for sentNo in docSentList: 
             global doc_sent_data
-            concepts = metamap.retrieve_concepts(doc_sent_data[str(sentNo).zfill(10)]) 
-            metamap.terminate_metamap()
+            query = doc_sent_data[str(sentNo).zfill(10)] 
+            concepts = metamap.retrieve_concepts(query)
             for concept_output in concepts: 
                 split_concept = concept_output.split('|') 
                 confidence_score = split_concept[2] 
@@ -58,6 +58,7 @@ def generate_concepts(data_dir):
     sent_file_path = os.path.join(data_dir, 'full_text_with_abstract_and_title.metamap')
     pmap_file_path = os.path.join(data_dir, 'full_text_with_abstract_and_title.metamap.chunkmap')
     output_file_dir = os.path.join(data_dir, 'concept_files')
+    remaining_file_list_path = os.path.join(data_dir, 'remaining.pkl')
     
     print "STEP 1: reading in document-sentence map file"
     docSentMapBinFile = open(pmap_file_path, 'rb')
@@ -72,10 +73,21 @@ def generate_concepts(data_dir):
         doc_sent_data[sentence[0]] = sentence[1]
     print "STEP 1 COMPLETE"
 
-    process_pool = multiprocessing.Pool(10)
+    documents = docSentMap.keys()
+
+    # if the remaining file list path exists then that means then the process
+    # was interrupted, needs to continue where it left off.
+    if os.path.exists(remaining_file_list_path):
+        rfile = open(remaining_file_list_path, 'rb')
+        try:
+            documents = pickle.load(rfile)
+        finally:
+            rfile.close()
+
+    process_pool = multiprocessing.Pool(15)
     print "STEP 2: Generating concept documents "
     try:
-       for document in docSentMap.keys():
+       for document in documents:
             output_file_path = os.path.join(output_file_dir, document)
             docSentList = docSentMap[document]
             process_pool.apply_async(cui_extractor_worker, (docSentList, output_file_path), callback=completed_cb)

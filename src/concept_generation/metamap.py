@@ -1,6 +1,6 @@
 #!/usr/local/bin/python -Wall
 
-import os, subprocess, sys, nltk
+import os, subprocess, sys, nltk,time
 
 metamap_path = '/opt/public_mm/bin/metamap11'
 
@@ -22,13 +22,12 @@ def retrieve_concepts(query):
     mm_process.stdout.close()
     process.terminate()
     # print metamap_output 
-    try:
-        result = filter_candidate_concepts(metamap_output)
-        return result
-    finally:
-        mm_process.wait()       # wait until the mm_process completely terminates
-        time.sleep(1)
-
+    result = filter_candidate_concepts(metamap_output)
+    while(process.poll() and mm_process.poll()):
+        time.sleep(0.5)
+    
+    return result
+            
 
 if __name__ == '__main__':
     if sys.argv[0] == 'python':
