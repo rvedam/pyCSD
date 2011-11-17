@@ -27,11 +27,20 @@ def find_ambiguities(data_dir):
 
     # for each document, grab the phrase and the CUI (we'll add filtering later) 
     # and store them
+    num = 1
     for document in os.listdir(output_file_dir):
-        print 'PROCESSING DOCUMENT: ', document
         phrase_cui_file = open(os.path.join(output_file_dir, document), 'rU')
         for phrase_cui_line in phrase_cui_file.readlines():
+            if '|' not in phrase_cui_line:
+                continue
             phrase_cui_comp = phrase_cui_line.split('|')
+            cui = ""
+            try:
+                cui = phrase_cui_comp[2]
+            except IndexError:
+                print 'phrase_cui_comp: ', phrase_cui_comp
+                sys.exit(1)
+
             # find the sentence where the phrase is located 
             sentence = sent_map[phrase_cui_comp[0].zfill(10)]
             # grab the phrase information that we have recorded from the metamap output.
@@ -41,10 +50,11 @@ def find_ambiguities(data_dir):
             if ',' in phrase_info: # we may have a concept mapped to a phrase spanning two words
                 for phrase_info_comp in phrase_info.split(','):
                     splited_pinfo_comp = phrase_info_comp.split(':')
-                    phraseStartIdx = int(splited_pinfo_comp[0]) 
-                    phrase_length = int(splited_pinfo_comp[1]) 
-                    phraseEndIdx = phraseStartIdx + phrase_length
-                    phraseList.append(sentence[phraseStartIdx:phraseEndIdx])
+                    if isinstance(splited_pinfo_comp[0], (int ,long)) and isinstance(splited_pinfo_comp[1], (int, long)):
+                        phraseStartIdx = int(splited_pinfo_comp[0])
+                        phrase_length = int(splited_pinfo_comp[1]) 
+                        phraseEndIdx = phraseStartIdx + phrase_length
+                        phraseList.append(sentence[phraseStartIdx:phraseEndIdx])
                 phrase = phrase.join(phraseList)
             else:
                 if ':' in phrase_info: 
@@ -54,15 +64,15 @@ def find_ambiguities(data_dir):
                     phraseEndIdx = phraseStartIdx + phrase_length
                     phrase = sentence[phraseStartIdx:phraseEndIdx]
                 
-            # grab the sentence and phrase
-            if phrase not in word_concept_dict:
-                word_concept_dict[phrase] = []
-            word_concept_dict[phrase].append(phrase_cui_comp[2])
+                # grab the sentence and phrase
+                if phrase not in word_concept_dict:
+                    word_concept_dict[phrase] = set() 
+                word_concept_dict[phrase].add(cui)
 
     ambig_word_concept_dict = dict()
     for phrase in word_concept_dict:
         if len(word_concept_dict[phrase]) > 1:
-            ambig_word_concept_dict[phrase] = word_concept_dict[phrase]
+            ambig_word_concept_dict[phrase] = list(word_concept_dict[phrase])
     return ambig_word_concept_dict
        
 
@@ -74,20 +84,23 @@ if __name__ == '__main__':
 
     # grab all ambiguities in the corpus
     ambig_word_concept_dict = find_ambiguities(data_dir)
+    print 'pickling data'
     ambig_file = open(ambig_file_path, 'wb+')
     try:
         pickle.dump(ambig_word_concept_dict, ambig_file)
     finally:
         ambig_file.close()
+    print 'pickling data complete'
     
     print 'PROCESS COMPLETED'
     fromaddr = 'Ramnarayan.Vedam@uth.tmc.edu'
-    toaddrs = ['Ramnarayan.Vedam@uth.tmc.edu', 'Jorge.R.Herskovic@uth.tmc.edu']
+    toaddrs = ["Ramnarayan.Vedam@uth.tmc.edu", "Jorge.R.Herskovic@uth.tmc.edu"]
 
     Subject = 'Word Ambiguities detection program completed'
     msg = MIMEText('The program that would find all ambiguities from running metamap with wsd turned on has been completed.\
 Please look at the pickled file ambiguities.pkl located in /data/ram/14k_collection/ directory')
 
+    msg['Content-type'] = 'text/plain'
     msg['Subject'] = Subject
     msg['From'] = fromaddr
     msg['To'] = toaddrs

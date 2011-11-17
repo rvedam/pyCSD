@@ -10,7 +10,7 @@ import csdutils, metamap
 from sqlite_dict import *
 import time
 
-# The actual location of the UMLS CUI DB
+# The location of the UMLS CUI DB - maps CUIs to their definitions
 UMLS_DB_LOCATION=os.path.normpath(os.path.expanduser("/data/ram/umlsdb.sqlite3"))
 
 global doc_counter

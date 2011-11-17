@@ -6,7 +6,7 @@
 from collections import defaultdict
 import math, cPickle as pickle, os, sys
 
-class NaivesBayes:
+class NaiveBayes:
     def __init__(self, tr_size, sent_file_path):
         self.concept_prob = {}  # will hold the concept sense probabilities
         self.tr_size = tr_size
@@ -23,20 +23,20 @@ class NaivesBayes:
         for sentData in sent_file.readlines():
             sentence = sentData.split('|')
             self.sent_map[sentence[0]] = sentence[1]
-
-    def training(self, training_data_files):
+        sent_file.close()
+    def train(self, training_data_files):
         '''trains bayesian model for concept sense disambiguation.'''
         # assign all concept's probabilities their appropriate mapping probability as returned
         # by metamap.
         fcount = 0
         for fname in training_data_files:
             fcount = fcount + 1
-            per_complete = (fcount*1.0/580)*100
+            per_complete = (fcount*1.0/self.tr_size)*100
             if per_complete % 10 == 0:
                 print per_complete, '% complete'
             data_file = open(fname, 'rU')
             for line in data_file.readlines():
-                split_line = line.split(',')
+                split_line = line.split('|')
                 cui = split_line[2]
                 # make the first confidence score metamap uses the initial probability of the sense
                 if cui not in self.concept_prob.keys():
@@ -44,16 +44,29 @@ class NaivesBayes:
                 # create a dictionary to keep track of word counts for a given sense.
                 if cui not in self.corpus_word_concept_count.keys():
                     self.corpus_word_concept_count[cui] = {}
-                # grab the phrase information that we have recorded from the metamap output.
-                phrase_info = split_line[len(split_line) - 1].split(':')
-                phraseStartIdx = int(phrase_info[0])
-                phrase_length = int(phrase_info[1])
-                phraseEndIdx = phraseStartIdx + phrase_length
 
-                # grab the sentence
-                sentence = self.sent_map[split_line[0].zfill(10)]
-                phrase = sentence[phraseStartIdx:phraseEndIdx]
-
+                sentence = self.sent_map[split_line[0].zfill(10)] 
+                # grab the phrase information that we have recorded from the metamap output. 
+                phrase_info = split_line[len(split_line) - 1]
+                phraseList = []
+                phrase = " "
+                if ',' in phrase_info: # we may have a concept mapped to a phrase spanning two words
+                    for phrase_info_comp in phrase_info.split(','):
+                        splited_pinfo_comp = phrase_info_comp.split(':')
+                        if isinstance(splited_pinfo_comp[0], (int ,long)) and isinstance(splited_pinfo_comp[1], (int, long)):
+                            phraseStartIdx = int(splited_pinfo_comp[0])
+                            phrase_length = int(splited_pinfo_comp[1]) 
+                            phraseEndIdx = phraseStartIdx + phrase_length
+                            phraseList.append(sentence[phraseStartIdx:phraseEndIdx])
+                    phrase = phrase.join(phraseList)
+                else:
+                    if ':' in phrase_info: 
+                        pinfo_comp = phrase_info.split(':')
+                        phraseStartIdx = int(pinfo_comp[0]) 
+                        phrase_length = int(pinfo_comp[1]) 
+                        phraseEndIdx = phraseStartIdx + phrase_length
+                        phrase = sentence[phraseStartIdx:phraseEndIdx]
+                
                 # count the words inside the phrase for which the context has been extracted
                 for word in phrase.split(' '):
                     if word in self.corpus_word_count.keys():
@@ -67,6 +80,11 @@ class NaivesBayes:
                 if phrase not in self.word_concept_map.keys():
                     self.word_concept_map[phrase] = []
                 self.word_concept_map[phrase].append(cui)
+                if per_complete >= 100.0:
+                    break
+            data_file.close()
+            print 'PROCESSED %d documents' % fcount
+
     def disambiguation(self, phrase):
         '''
         disambiguates set of concepts for a given input with 
@@ -114,8 +132,8 @@ if __name__ == "__main__":
                 test_set_paths.append(fpath)
     
     sent_file_path = os.path.join('/data/ram/14k_collection', 'full_text_with_abstract_and_title.metamap')
-    classifier = NaivesBayes(tr_size, sent_file_path)
+    classifier = NaiveBayes(tr_size, sent_file_path)
     print 'TRAINING AGENT'
-    classifier.training(training_set_paths)
+    classifier.train(training_set_paths)
     print 'TRAINING AGENT COMPLETED'
     print classifier.disambiguation('target')
