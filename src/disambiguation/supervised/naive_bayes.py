@@ -39,15 +39,15 @@ class NaiveBayes:
                 split_line = line.split('|')
                 cui = split_line[2]
                 # make the first confidence score metamap uses the initial probability of the sense
-                if cui not in self.concept_prob.keys():
+                if cui not in self.concept_prob:
                     self.concept_prob[cui] = split_line[1]
                 # create a dictionary to keep track of word counts for a given sense.
-                if cui not in self.corpus_word_concept_count.keys():
+                if cui not in self.corpus_word_concept_count:
                     self.corpus_word_concept_count[cui] = {}
 
                 sentence = self.sent_map[split_line[0].zfill(10)] 
                 # grab the phrase information that we have recorded from the metamap output. 
-                phrase_info = split_line[len(split_line) - 1]
+                phrase_info = split_line[-1]
                 phraseList = []
                 phrase = " "
                 if ',' in phrase_info: # we may have a concept mapped to a phrase spanning two words
@@ -69,15 +69,9 @@ class NaiveBayes:
                 
                 # count the words inside the phrase for which the context has been extracted
                 for word in phrase.split(' '):
-                    if word in self.corpus_word_count.keys():
-                        self.corpus_word_count[word] = self.corpus_word_count[word] + 1
-                    else:
-                        self.corpus_word_count[word] = 1
-                    if word in self.corpus_word_concept_count[cui]:
-                        self.corpus_word_concept_count[cui][word] += 1
-                    else:
-                        self.corpus_word_concept_count[cui][word] = 1
-                if phrase not in self.word_concept_map.keys():
+                    self.corpus_word_count[word] = self.corpus_word_count.get(word, 0) + 1
+                    self.corpus_word_concept_count[cui][word] = self.corpus_word_concept_count[cui].get(word, 0) + 1
+                if phrase not in self.word_concept_map:
                     self.word_concept_map[phrase] = []
                 self.word_concept_map[phrase].append(cui)
                 if per_complete >= 100.0:
