@@ -36,7 +36,7 @@ class LeskAlgo:
         '''
         sdef1 = set(def1)
         oscore = sdef1.intersection(query)
-        return oscore
+        return len(oscore)
     def disambiguation(self, query):
         '''
         currently this is designed to only deal with the ambiguities found in the corpus.
