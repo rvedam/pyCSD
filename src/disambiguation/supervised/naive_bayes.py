@@ -23,6 +23,7 @@ class NaiveBayes:
         self.cui_span_map = {} 
         # this will keep track for each phrase, the list of CUIs mapped to it. 
         self.word_concept_map = {}
+        self.concept_info_map = {}
         self.sent_map = {}
         sent_file = open(sent_file_path, 'rU')
         for sentData in sent_file.readlines():
@@ -41,18 +42,25 @@ class NaiveBayes:
                 print per_complete, '% complete'
             data_file = open(fname, 'rU')
             for line in data_file.readlines():
+                if '|' not in line:
+                    continue
                 split_line = line.split('|')
-                cui = split_line[2]
+                try:
+                    cui = split_line[2]
+                except IndexError:
+                    print 'line parse error: ', line
+                    sys.exit(1)
+                    
                 # make the first confidence score metamap uses the initial probability of the sense
-                if cui not in self.concept_prob.keys():
+                if cui not in self.concept_prob:
                     self.concept_prob[cui] = split_line[1]
                 # create a dictionary to keep track of word counts for a given sense.
-                if cui not in self.corpus_word_concept_count.keys():
+                if cui not in self.corpus_word_concept_count:
                     self.corpus_word_concept_count[cui] = {}
 
                 sentence = self.sent_map[split_line[0].zfill(10)] 
                 # grab the phrase information that we have recorded from the metamap output. 
-                phrase_info = split_line[len(split_line) - 1]
+                phrase_info = split_line[-1]
                 phraseList = []
                 phrase = " "
                 if ',' in phrase_info: # we may have a concept mapped to a phrase spanning two words
@@ -74,16 +82,17 @@ class NaiveBayes:
                 
                 # count the words inside the phrase for which the context has been extracted
                 for word in phrase.split(' '):
-                    if word in self.corpus_word_count.keys():
-                        self.corpus_word_count[word] = self.corpus_word_count.get(word, 0) + 1
-                        self.corpus_word_concept_count[cui][word] = self.corpus_word_concept_count[cui].get(word, 0) + 1
+                    self.corpus_word_count[word] = self.corpus_word_count.get(word, 0) + 1
+                    self.corpus_word_concept_count[cui][word] = self.corpus_word_concept_count[cui].get(word, 0) + 1
                 if phrase not in self.word_concept_map:
                     self.word_concept_map[phrase] = []
                 self.word_concept_map[phrase].append(cui)
+                # add the concept info into the concept_info dictionary
+                self.concept_info_map[cui] = {'span': phrase, 'name': split_line[3]}
                 if per_complete >= 100.0:
                     break
             data_file.close()
-            print 'PROCESSED %d documents' % fcount
+#            print 'PROCESSED %d documents' % fcount
 
     def disambiguation(self, phrase):
         '''
@@ -94,11 +103,8 @@ class NaiveBayes:
             c_scores = {}
             for cui in self.word_concept_map[phrase]:
                 c_scores[cui] = math.fabs(math.log(float(self.concept_prob[cui])))
-                print 'CONCEPT CUI: ', cui
-                print 'CONCEPT CUI PROBABILITY: ', c_scores[cui]
                 for word in phrase.split(' '):
                     c_scores[cui] += math.fabs(math.log(float(self.corpus_word_concept_count[cui][word])/float(self.corpus_word_count[word])))
-                print 'FINAL CONCEPT SCORE: ', c_scores[cui]
             # find the maximum concept
             disamb_concept, cur_max = "", 0.0
             print "DISAMBIGUATING PHRASE: " , phrase
@@ -107,7 +113,8 @@ class NaiveBayes:
                 print 'c_scores[concept]: ', c_scores[concept]
                 if c_scores[concept] > cur_max:
                     disamb_concept, cur_max = concept, c_scores[concept]
-            return 'DISAMBIGUATED CONCEPT: ', disamb_concept
+            result = 'PHRASE: ' + phrase + ' DISAMBIGUATED CONCEPT: ' + disamb_concept + ' CONCEPT INFO: ' + str(self.concept_info_map[disamb_concept])
+            return result
         except KeyError:
             print 'phrase never encountered in corpus'
 
@@ -115,7 +122,7 @@ if __name__ == "__main__":
     dir_path = ""
     tr_size = -1
     dir_path = sys.argv[1]
-    tr_size = sys.argv[2]
+    tr_size = int(sys.argv[2])
     training_set_paths = []
     test_set_paths = []
     
@@ -136,4 +143,4 @@ if __name__ == "__main__":
     print 'TRAINING AGENT'
     classifier.train(training_set_paths)
     print 'TRAINING AGENT COMPLETED'
-    print classifier.disambiguation('target')
+    print classifier.disambiguation('respiratory function')

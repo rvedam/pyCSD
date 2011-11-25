@@ -18,10 +18,7 @@ doc_concepts_dir = os.path.join(data_dir, 'concept_files')  # holds corpus of cu
 
 # following constants is how we split the dataset. for NaiveBayes 
 # we use a (train/test) 70/30 scheme.
-# training_size = 9599
-# training_size = 1000
 training_size = 13172
-test_set = 4113
 
 # unpickle ambiguities dictionary (phrase key multiple cuis)
 ambigdict = pickle.load(open(os.path.join(data_dir, 'ambiguities.pkl'), 'rb+'))
@@ -48,9 +45,11 @@ def create_nb_classifier():
     nbdisambigalgo.train(tr_file_set)
 
     # pickle the trained data model
+    print 'WRITING OUT TRAINED MODEL. PLEASE WAIT...'
     nfile = open(os.path.join(data_dir, 'trained_bayes.pkl'),'wb')
     pickle.dump(nbdisambigalgo, nfile)
     nfile.close()
+    print 'TRAINED MODEL BACKED UP.\n TRAINING PROCESS COMPLETE'
     return nbdisambigalgo
 
 print 'loading naive bayes model'
@@ -65,7 +64,11 @@ else:
     nb = create_nb_classifier()
     print 'TRAINING COMPLETE'
 
-phrase = raw_input('Enter phrase to disambiguate: ')
-
-print nb.disambiguation(phrase)
+done = False
+while not done:
+    phrase = raw_input('Enter phrase to disambiguate: ')
+    print nb.disambiguation(phrase)
+    complete = raw_input('More phrase to disambiguate(y/n)?: ')
+    if complete.lower() == 'n':
+        done = True
 
