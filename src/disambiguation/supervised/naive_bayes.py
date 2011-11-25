@@ -6,6 +6,10 @@
 from collections import defaultdict
 import math, cPickle as pickle, os, sys
 
+# TODO: Need to parallelize training algorithm
+# TODO: Need to add context (ie span of the cui at which we are disambiguating on)
+
+# need to print out the span
 class NaiveBayes:
     def __init__(self, tr_size, sent_file_path):
         self.concept_prob = {}  # will hold the concept sense probabilities
@@ -15,7 +19,8 @@ class NaiveBayes:
         self.corpus_word_count = {}         
         # the following hashtable that will number of times words occurs in 
         # phrase that contains a particular concept
-        self.corpus_word_concept_count = {} 
+        self.corpus_word_concept_count = {}
+        self.cui_span_map = {} 
         # this will keep track for each phrase, the list of CUIs mapped to it. 
         self.word_concept_map = {}
         self.sent_map = {}
@@ -70,14 +75,9 @@ class NaiveBayes:
                 # count the words inside the phrase for which the context has been extracted
                 for word in phrase.split(' '):
                     if word in self.corpus_word_count.keys():
-                        self.corpus_word_count[word] = self.corpus_word_count[word] + 1
-                    else:
-                        self.corpus_word_count[word] = 1
-                    if word in self.corpus_word_concept_count[cui]:
-                        self.corpus_word_concept_count[cui][word] += 1
-                    else:
-                        self.corpus_word_concept_count[cui][word] = 1
-                if phrase not in self.word_concept_map.keys():
+                        self.corpus_word_count[word] = self.corpus_word_count.get(word, 0) + 1
+                        self.corpus_word_concept_count[cui][word] = self.corpus_word_concept_count[cui].get(word, 0) + 1
+                if phrase not in self.word_concept_map:
                     self.word_concept_map[phrase] = []
                 self.word_concept_map[phrase].append(cui)
                 if per_complete >= 100.0:

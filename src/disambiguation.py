@@ -19,7 +19,8 @@ doc_concepts_dir = os.path.join(data_dir, 'concept_files')  # holds corpus of cu
 # following constants is how we split the dataset. for NaiveBayes 
 # we use a (train/test) 70/30 scheme.
 # training_size = 9599
-training_size = 1000
+# training_size = 1000
+training_size = 13172
 test_set = 4113
 
 # unpickle ambiguities dictionary (phrase key multiple cuis)
@@ -28,6 +29,7 @@ ambigdict = pickle.load(open(os.path.join(data_dir, 'ambiguities.pkl'), 'rb+'))
 # grab the UMLS_DB
 umls = SQLiteDict(UMLS_DB_LOCATION)
 
+# TODO: Need to parallelize Training of Naive Bayes
 # grab instance of NaiveBayes algorithm (we will be
 def create_nb_classifier():
     nbdisambigalgo = NaiveBayes(training_size, sent_file_path)
@@ -51,9 +53,13 @@ def create_nb_classifier():
     nfile.close()
     return nbdisambigalgo
 
+print 'loading naive bayes model'
 nfile = os.path.join(data_dir, 'trained_bayes.pkl')
 if os.path.isfile(nfile):
-    nb = pickle.load(open(nfile, 'rb'))
+    nf = open(nfile, 'rb')
+    nb = pickle.load(nf)
+    nf.close()
+    print 'model loaded'
 else:
     print 'Trained model doesn\'t exist. Creating new trained Naive Bayes Model'
     nb = create_nb_classifier()
