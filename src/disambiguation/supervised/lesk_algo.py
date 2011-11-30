@@ -24,10 +24,8 @@ class LeskAlgo:
         finally:
             sent_file.close()
         ambig_file = open(ambig_file_path, 'rb')
-        try:
-            self.ambigdict = pickle.load(ambig_file)
-        finally:
-            ambig_file.close()
+        self.ambigdict = pickle.load(ambig_file)
+        ambig_file.close()
     def overlap(self, def1, context):
         '''
         checking to see how much overlap there is between two definitions of a sense.
@@ -43,7 +41,7 @@ class LeskAlgo:
         '''
         currently this is designed to only deal with the ambiguities found in the corpus.
         '''
-        for concept in ambigdict[query]:
+        for concept in self.ambigdict[query]:
             cdef = umls[concept]
             self.concept_scores[concept] = self.overlap(cdef, query)
         cmax_score = -1

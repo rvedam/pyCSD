@@ -9,6 +9,8 @@ import os, sys, cPickle as pickle
 
 # The location of the UMLS CUI DB - maps CUIs to their definitions
 UMLS_DB_LOCATION=os.path.normpath(os.path.expanduser("/data/ram/umlsdb.sqlite3"))
+# TODO make FILE to load a command-line parameter
+TRAINED_BAYES_FILE = 'trained_bayes_span_set.pkl'
 
 # parent directory of where the data is located
 data_dir = '/data/ram/14k_collection'
@@ -46,14 +48,14 @@ def create_nb_classifier():
 
     # pickle the trained data model
     print 'WRITING OUT TRAINED MODEL. PLEASE WAIT...'
-    nfile = open(os.path.join(data_dir, 'trained_bayes.pkl'),'wb')
+    nfile = open(os.path.join(data_dir, TRAINED_BAYES_FILE),'wb')
     pickle.dump(nbdisambigalgo, nfile)
     nfile.close()
     print 'TRAINED MODEL BACKED UP.\n TRAINING PROCESS COMPLETE'
     return nbdisambigalgo
 
 print 'loading naive bayes model'
-nfile = os.path.join(data_dir, 'trained_bayes.pkl')
+nfile = os.path.join(data_dir, TRAINED_BAYES_FILE)
 if os.path.isfile(nfile):
     nf = open(nfile, 'rb')
     nb = pickle.load(nf)
