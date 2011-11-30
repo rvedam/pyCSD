@@ -50,7 +50,6 @@ class NaiveBayes:
                 except IndexError:
                     print 'line parse error: ', line
                     sys.exit(1)
-                    
                 # make the first confidence score metamap uses the initial probability of the sense
                 if cui not in self.concept_prob:
                     self.concept_prob[cui] = split_line[1]
@@ -88,7 +87,10 @@ class NaiveBayes:
                     self.word_concept_map[phrase] = []
                 self.word_concept_map[phrase].append(cui)
                 # add the concept info into the concept_info dictionary
-                self.concept_info_map[cui] = {'span': phrase, 'name': split_line[3]}
+                if cui in self.concept_info_map:
+                    self.concept_info_map[cui]['span'].add(phrase) # add the phrase that got mapped to the current set
+                else:
+                    self.concept_info_map[cui] = {'span': set([phrase]), 'name': split_line[3]}
                 if per_complete >= 100.0:
                     break
             data_file.close()
