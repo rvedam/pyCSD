@@ -34,8 +34,10 @@ class LeskAlgo:
         utilizes bag of words model and computes the cardinality of the intersection 
         set consists of those terms that are in both sets.
         '''
+        # TODO: Strip stopwords from definitions AND from context
+        # TODO: Think about normalizing the scores in a meaningful way
         sdef1 = set(def1)
-        oscore = sdef1.intersection(query)
+        oscore = sdef1.intersection(context)
         return len(oscore)
     def disambiguation(self, query):
         '''
