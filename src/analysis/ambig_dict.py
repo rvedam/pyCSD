@@ -11,15 +11,15 @@ import os.path   # Platform-independent path manipulation
 
 class AmbigDict:
     def __init__(self):
-        self.word_concept_dict = dict() 
+        self.span_concept_dict = dict() 
         self.sent_no_dict = dict()
     def add_entry(self, phrase, concept_list, sent_no_list):
-        self.word_concept_dict[phrase] = concept_list
+        self.span_concept_dict[phrase] = concept_list
         self.sent_no_dict[phrase] = sent_no_list
     def get_concepts(self, phrase):
-        return self.word_concept_dict[phrase]
+        return self.span_concept_dict[phrase]
     def get_sentences(self, phrase):
         return self.sent_no_dict[phrase]
     def keys(self):
-        return self.word_concept_dict.keys()
+        return self.span_concept_dict.keys()
 
