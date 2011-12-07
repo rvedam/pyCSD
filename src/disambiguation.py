@@ -23,7 +23,7 @@ doc_concepts_dir = os.path.join(data_dir, 'concept_files')  # holds corpus of cu
 training_size = 13172
 
 # unpickle ambiguities dictionary (phrase key multiple cuis)
-ambigdict = pickle.load(open(os.path.join(data_dir, 'ambiguities.pkl'), 'rb+'))
+ambigdict = pickle.load(open(os.path.join(data_dir, 'ambiguities_bayes.pkl'), 'rb+'))
 
 # grab the UMLS_DB
 umls = SQLiteDict(UMLS_DB_LOCATION)
@@ -49,7 +49,7 @@ def create_nb_classifier():
     # pickle the trained data model
     print 'WRITING OUT TRAINED MODEL. PLEASE WAIT...'
     nfile = open(os.path.join(data_dir, TRAINED_BAYES_FILE),'wb')
-    pickle.dump(nbdisambigalgo, nfile)
+    pickle.dump(nbdisambigalgo, nfile, pickle.HIGHEST)
     nfile.close()
     print 'TRAINED MODEL BACKED UP.\n TRAINING PROCESS COMPLETE'
     return nbdisambigalgo

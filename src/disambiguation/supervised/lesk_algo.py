@@ -9,7 +9,18 @@ import math, cPickle as pickle, os, sys
 
 # The location of the UMLS CUI DB - maps CUIs to their definitions
 UMLS_DB_LOCATION=os.path.normpath(os.path.expanduser("/data/ram/umlsdb.sqlite3"))
+STOPWORD_FILE = os.path.join("/home", "ram", "pyCSD", "utils", "salton_stopwords.txt")
+
 umls = SQLiteDict(UMLS_DB_LOCATION)
+
+# read in stopwords file.
+stopwords = set()
+sw_file = open(STOPWORD_FILE, 'r+')
+
+for line in sw_file.readlines():
+    stopwords.add(line)
+
+sw_file.close()
 
 class LeskAlgo:
     def __init__(self, sent_file_path, ambig_file_path):
@@ -33,15 +44,22 @@ class LeskAlgo:
         set consists of those terms that are in both sets.
         '''
         # TODO: Strip stopwords from definitions AND from context
-        # TODO: Think about normalizing the scores in a meaningful way
         sdef1 = set(def1)
-        oscore = sdef1.intersection(context)
+        sdef1 = sdef1.difference(stopwords)
+        context = set(context).difference(stopwords)
+
+        # TODO: Think about normalizing the scores in a meaningful way
+        oscore = sdef1.intersection(set(context))
+
         return len(oscore)
     def disambiguation(self, query):
         '''
-        currently this is designed to only deal with the ambiguities found in the corpus.
+        currently this is designed to only deal with the ambiguities found in 
+        the corpus.
         '''
         for concept in self.ambigdict[query]:
+            # find the sentence that this query mapped to.
+
             cdef = umls[concept]
             self.concept_scores[concept] = self.overlap(cdef, query)
         cmax_score = -1
