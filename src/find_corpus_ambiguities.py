@@ -24,6 +24,7 @@ def find_corpus_ambiguities(data_dir):
     for sentData in sentMapData.readlines():
         sentence = sentData.split('|')
         sent_map[sentence[0]] = sentence[1]
+    sentMapData.close()
 
     # for each document, grab the phrase and the CUI (we'll add filtering later) 
     # and store them
@@ -72,6 +73,7 @@ def find_corpus_ambiguities(data_dir):
  
                 word_concept_dict[phrase].add(cui)
                 sent_no_dict[phrase].add(sent_no)
+        phrase_cui_file.close()
 
     final_ambig_dict = AmbigDict()
     ambig_word_concept_dict = dict()
@@ -85,7 +87,7 @@ def find_corpus_ambiguities(data_dir):
 
 if __name__ == '__main__':
     data_dir = '/data/ram/14k_collection/'
-    pickle_fname = 'ambiguities_info.pkl'
+    pickle_fname = 'ambiguities_corpus.pkl'
     print 'FINDING AMIBIGUITIES INSIDE DATASET PROVIDED IN DATA_DIR: ', data_dir
     # pickle the final set of ambiguities to a file
     ambig_file_path = os.path.join(data_dir, pickle_fname)
